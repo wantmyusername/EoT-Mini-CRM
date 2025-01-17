@@ -1062,8 +1062,43 @@ function transport_crm_export_excel() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'transport_services';
 
-    // Obtener todos los servicios
-    $services = $wpdb->get_results("SELECT * FROM $table_name ORDER BY service_date DESC");
+    // Obtener parámetros de filtro
+    $date_filter_type = isset($_GET['date_filter_type']) ? sanitize_text_field($_GET['date_filter_type']) : '';
+    $filter_date = isset($_GET['filter_date']) ? sanitize_text_field($_GET['filter_date']) : '';
+    $filter_month = isset($_GET['filter_month']) ? sanitize_text_field($_GET['filter_month']) : '';
+    $filter_agency = isset($_GET['filter_agency']) ? sanitize_text_field($_GET['filter_agency']) : '';
+    $filter_provider = isset($_GET['filter_provider']) ? sanitize_text_field($_GET['filter_provider']) : '';
+    $filter_vehicle = isset($_GET['filter_vehicle']) ? sanitize_text_field($_GET['filter_vehicle']) : '';
+
+    // Construir la consulta base
+    $query = "SELECT * FROM $table_name WHERE 1=1";
+    $query_params = array();
+
+    if ($date_filter_type === 'month' && !empty($filter_month)) {
+        $query .= " AND DATE_FORMAT(service_date, '%Y-%m') = %s";
+        $query_params[] = $filter_month;
+    } elseif (!empty($filter_date)) {
+        $query .= " AND DATE(service_date) = %s";
+        $query_params[] = $filter_date;
+    }
+
+    if (!empty($filter_agency)) {
+        $query .= " AND agency LIKE %s";
+        $query_params[] = '%' . $wpdb->esc_like($filter_agency) . '%';
+    }
+
+    if (!empty($filter_provider)) {
+        $query .= " AND provider LIKE %s";
+        $query_params[] = '%' . $wpdb->esc_like($filter_provider) . '%';
+    }
+
+    if (!empty($filter_vehicle)) {
+        $query .= " AND vehicle_type = %s";
+        $query_params[] = $filter_vehicle;
+    }
+
+    // Obtener los servicios filtrados
+    $services = $wpdb->get_results($wpdb->prepare($query, $query_params));
 
     // Configurar encabezados para la descarga de CSV
     header('Content-Type: text/csv; charset=utf-8');
