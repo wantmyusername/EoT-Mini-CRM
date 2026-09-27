@@ -1,113 +1,76 @@
-# Service Receipt Plugin
+# EoT Mini CRM — Transport CRM
 
-Este plugin genera un comprobante profesional y detallado de servicio, ideal para empresas de transporte, turismo y servicios relacionados. Presenta la información clave de forma clara y ordenada, con opciones para personalización e impresión.
+Plugin de **WordPress** que añade un **mini CRM para gestionar los servicios de transporte** de **Exclusive on Trip** ([exclusiveontrip.com](https://exclusiveontrip.com)). Registra su propia tabla y agrega el menú **"EoT CRM"** en el panel de administración.
 
-## Características principales
+## Qué es
 
-- **Diseño profesional**: Layout moderno y limpio con colores configurables.
-- **Detalles estructurados**: Información del pasajero, punto de recogida, destino, y referencia de reserva.
-- **Botón de impresión**: Genera un comprobante optimizado para papel.
-- **Compatibilidad responsiva**: Funciona bien en dispositivos móviles y de escritorio.
-- **Soporte multi-idioma**: Configurado en español e inglés.
+`transport-crm.php` es un plugin que permite dar de alta, editar y consultar **reservas/servicios de transporte** (cliente, agencia, proveedor, ruta, fecha, pasajeros, vehículo, saldo y estado de pago), además de **exportar a Excel, generar PDF e imprimir** cada servicio.
 
-## Cómo usar este plugin
+## Características
 
-1. **Descarga e instala los archivos**:
-   - Copia los archivos HTML, CSS y JS del proyecto en tu directorio.
-   - Asegúrate de que el diseño esté conectado a tu backend para recibir datos dinámicos.
+- **Listado** de servicios en el admin (menú **EoT CRM**).
+- **Alta** y **edición** de servicios.
+- **Cambio de estado de pago** por AJAX.
+- **Exportar a Excel** todos los servicios (AJAX).
+- **Descargar PDF** de un servicio (AJAX).
+- **Imprimir** un servicio (AJAX).
+- **Eliminar** un servicio (AJAX).
 
-2. **Integra el código HTML en tu proyecto**:
-   Coloca el siguiente fragmento en el archivo donde deseas mostrar el comprobante:
+### Campos del servicio
 
-   ```html
-   <div class="receipt-container">
-       <div class="info-card">
-           <h2>Comprobante de Servicio</h2>
-           <p><strong>Referencia:</strong> #12345</p>
-           <p><strong>Recogida:</strong> Aeropuerto Internacional</p>
-           <p><strong>Destino:</strong> Hotel XYZ</p>
-           <p><strong>Pasajero:</strong> John Doe</p>
-       </div>
-       <button id="print-btn">Imprimir</button>
-   </div>
-   ```
+Cliente (nombre, teléfono, email), agencia, proveedor, tipo de servicio, tipo de viaje (`one_way`), fecha, **recogida** y **destino** (con URL de mapa), hora de recogida de regreso, número de vuelo, pasajeros, tipo de vehículo, **saldo** + moneda (`USD`/`MXN`), **estado de pago**, importe de reporte y de proveedor, y notas.
 
-3. **Agrega el estilo CSS**:
-   Copia y pega el siguiente CSS en tu archivo de estilos:
+## Archivos
 
-   ```css
-   .receipt-container {
-       max-width: 600px;
-       margin: 20px auto;
-       padding: 20px;
-       border: 1px solid #ddd;
-       border-radius: 10px;
-       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-       font-family: Arial, sans-serif;
-       background-color: #f9f9f9;
-   }
+| Archivo | Descripción |
+|---|---|
+| `transport-crm.php` | El plugin de WordPress (todo el CRM). |
+| `travel-reservation.html` | Voucher / ficha de servicio imprimible (con logo y contacto de Exclusive on Trip). |
 
-   .info-card {
-       margin-bottom: 20px;
-   }
+## Estructura de menús / acciones
 
-   #print-btn {
-       display: block;
-       margin: 0 auto;
-       padding: 10px 20px;
-       background-color: #007bff;
-       color: white;
-       border: none;
-       border-radius: 5px;
-       cursor: pointer;
-   }
+- `transport_crm_main_page` — listado principal.
+- `transport_crm_new_service` / `transport_crm_edit_service` — alta y edición.
+- AJAX (`wp_ajax_*`): `delete_transport_service`, `update_payment_status`, `export_services_excel`, `download_service_pdf`, `print_service`.
 
-   #print-btn:hover {
-       background-color: #0056b3;
-   }
+## Base de datos
 
-   @media print {
-       #print-btn {
-           display: none;
-       }
-   }
-   ```
+Al activarse, crea/actualiza la tabla **`{prefijo}transport_services`**:
 
-4. **Agrega la funcionalidad con JavaScript**:
-   Incluye este código en un archivo JS o en tu archivo HTML:
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | mediumint | PK autoincremental |
+| `created_at` | datetime | default `CURRENT_TIMESTAMP` |
+| `client_name` / `client_phone` / `client_email` | varchar | Datos del cliente |
+| `agency` / `provider` | varchar | Agencia y proveedor |
+| `service_type` / `trip_type` | varchar | Tipo de servicio / viaje |
+| `service_date` | datetime | Fecha del servicio |
+| `pickup_location` / `pickup_location_url` | text | Recogida |
+| `destination` / `destination_url` | text | Destino |
+| `return_pickup_time` | time | Recogida de regreso |
+| `flight_number` | varchar | Nº de vuelo |
+| `passengers` | int | Pasajeros |
+| `vehicle_type` | varchar | Tipo de vehículo |
+| `balance` / `balance_currency` | decimal / enum | Saldo y moneda (`USD`/`MXN`) |
+| `payment_status` | varchar | Estado de pago |
+| `report_amount` / `report_provider_amount` | decimal | Importes de reporte |
+| `notes` | text | Notas |
+| `last_edited` | datetime | Última edición |
 
-   ```javascript
-   document.getElementById('print-btn').addEventListener('click', function () {
-       window.print();
-   });
-   ```
+## Instalación
 
-5. **Configuración de backend**:
-   Asegúrate de que los datos como referencia, recogida, destino y pasajero se pasen dinámicamente desde tu backend. Ejemplo en PHP:
+1. Copia `transport-crm.php` a `wp-content/plugins/` (en su propia carpeta) o súbelo como plugin.
+2. Actívalo en **Plugins** del admin de WordPress → crea la tabla.
+3. Aparecerá el menú **EoT CRM**.
 
-   ```php
-   echo "<p><strong>Referencia:</strong> " . $service->id . "</p>";
-   echo "<p><strong>Recogida:</strong> " . $service->pickup_location . "</p>";
-   echo "<p><strong>Destino:</strong> " . $service->destination . "</p>";
-   echo "<p><strong>Pasajero:</strong> " . $service->passenger_name . "</p>";
-   ```
+> Requiere **WordPress** y **PHP**. Usa `$wpdb` (no hay credenciales hardcodeadas). Está pensado para correr en `exclusiveontrip.com/crm/`.
 
-## Personalización
+## Notas
 
-- Cambia los colores y estilos editando las variables CSS.
-- Agrega más campos al comprobante según sea necesario.
-- Traducir etiquetas según el idioma deseado.
-
-## Contribuciones
-
-Si deseas contribuir a este proyecto:
-
-1. Haz un fork del repositorio.
-2. Crea una nueva rama: `git checkout -b feature/nueva-funcion`.
-3. Haz commit de tus cambios: `git commit -m 'Agrega una nueva función'`.
-4. Sube tus cambios: `git push origin feature/nueva-funcion`.
-5. Crea un Pull Request.
+- El README anterior describía un *"Service Receipt Plugin"* genérico (con ejemplos de CSS/JS); **no correspondía** a este código. Este documento describe el plugin real.
+- `travel-reservation.html` carga el logo desde `https://exclusiveontrip.com/logo.png` y muestra el correo de contacto del negocio.
+- No hay archivo `LICENSE` en el repositorio (el README anterior mencionaba MIT).
 
 ## Licencia
 
-Este proyecto está bajo la licencia MIT. Puedes usarlo y modificarlo libremente para tus propios proyectos.
+Sin archivo de licencia incluido.
