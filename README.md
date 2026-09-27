@@ -39,7 +39,7 @@ Hecho con **React + Vite + Tailwind CSS**.
 
 ## Backend (API PHP)
 
-El frontend consume una API propia (no incluida en este repo):
+El frontend consume una API propia, **servida por WordPress** en `https://exclusiveontrip.com/crm/api/` (no está incluida en este repo):
 
 | Base / endpoint | Uso |
 |---|---|
@@ -97,9 +97,13 @@ public/
   logo.png · expertos.jpg · taxi.jpg · plantilla_presentacion.pdf
 ```
 
+## Estado
+
+**Proyecto finalizado.** Es la versión entregada del sistema; se conserva como referencia.
+
 ## Notas
 
 - **Sesión:** el login guarda el usuario en `localStorage` (`crm_user`) y `ProtectedRoute` solo comprueba que exista. La autorización real debe hacerla el **backend**.
 - **Credenciales:** el repo **no** contiene usuarios ni contraseñas; estas se envían a la API en el login.
 - **Historial de git:** en commits anteriores vivía la versión antigua (un plugin de WordPress `transport-crm.php` + `travel-reservation.html`). Este repo ahora contiene la versión nueva del sistema.
-- Este repositorio es **privado** (`"private": true`).
+- El paquete npm es privado (`"private": true` en `package.json`); el repositorio de GitHub es **público**.
