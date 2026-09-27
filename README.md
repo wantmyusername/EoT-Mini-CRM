@@ -1,76 +1,105 @@
-# EoT Mini CRM — Transport CRM
+# CRM Exclusive On Trip
 
-Plugin de **WordPress** que añade un **mini CRM para gestionar los servicios de transporte** de **Exclusive on Trip** ([exclusiveontrip.com](https://exclusiveontrip.com)). Registra su propia tabla y agrega el menú **"EoT CRM"** en el panel de administración.
+Sistema de gestión (SPA) para **Exclusive On Trip**: cotizador de tours, mini-CRM de transporte, control de flotilla e historial de accesos. Se sirve en **`/crm/`** y consume una API PHP en `https://exclusiveontrip.com/crm/api/`.
 
-## Qué es
+Hecho con **React + Vite + Tailwind CSS**.
 
-`transport-crm.php` es un plugin que permite dar de alta, editar y consultar **reservas/servicios de transporte** (cliente, agencia, proveedor, ruta, fecha, pasajeros, vehículo, saldo y estado de pago), además de **exportar a Excel, generar PDF e imprimir** cada servicio.
+**Sitio:** [exclusiveontrip.com/crm](https://exclusiveontrip.com/crm/)
 
-## Características
+## Módulos
 
-- **Listado** de servicios en el admin (menú **EoT CRM**).
-- **Alta** y **edición** de servicios.
-- **Cambio de estado de pago** por AJAX.
-- **Exportar a Excel** todos los servicios (AJAX).
-- **Descargar PDF** de un servicio (AJAX).
-- **Imprimir** un servicio (AJAX).
-- **Eliminar** un servicio (AJAX).
-
-### Campos del servicio
-
-Cliente (nombre, teléfono, email), agencia, proveedor, tipo de servicio, tipo de viaje (`one_way`), fecha, **recogida** y **destino** (con URL de mapa), hora de recogida de regreso, número de vuelo, pasajeros, tipo de vehículo, **saldo** + moneda (`USD`/`MXN`), **estado de pago**, importe de reporte y de proveedor, y notas.
-
-## Archivos
-
-| Archivo | Descripción |
-|---|---|
-| `transport-crm.php` | El plugin de WordPress (todo el CRM). |
-| `travel-reservation.html` | Voucher / ficha de servicio imprimible (con logo y contacto de Exclusive on Trip). |
-
-## Estructura de menús / acciones
-
-- `transport_crm_main_page` — listado principal.
-- `transport_crm_new_service` / `transport_crm_edit_service` — alta y edición.
-- AJAX (`wp_ajax_*`): `delete_transport_service`, `update_payment_status`, `export_services_excel`, `download_service_pdf`, `print_service`.
-
-## Base de datos
-
-Al activarse, crea/actualiza la tabla **`{prefijo}transport_services`**:
-
-| Columna | Tipo | Notas |
+| Módulo | Ruta | Qué hace |
 |---|---|---|
-| `id` | mediumint | PK autoincremental |
-| `created_at` | datetime | default `CURRENT_TIMESTAMP` |
-| `client_name` / `client_phone` / `client_email` | varchar | Datos del cliente |
-| `agency` / `provider` | varchar | Agencia y proveedor |
-| `service_type` / `trip_type` | varchar | Tipo de servicio / viaje |
-| `service_date` | datetime | Fecha del servicio |
-| `pickup_location` / `pickup_location_url` | text | Recogida |
-| `destination` / `destination_url` | text | Destino |
-| `return_pickup_time` | time | Recogida de regreso |
-| `flight_number` | varchar | Nº de vuelo |
-| `passengers` | int | Pasajeros |
-| `vehicle_type` | varchar | Tipo de vehículo |
-| `balance` / `balance_currency` | decimal / enum | Saldo y moneda (`USD`/`MXN`) |
-| `payment_status` | varchar | Estado de pago |
-| `report_amount` / `report_provider_amount` | decimal | Importes de reporte |
-| `notes` | text | Notas |
-| `last_edited` | datetime | Última edición |
+| **Login** | `/` | Acceso al CRM (usuario/contraseña contra la API). |
+| **Menú** | `/menu` | Panel con acceso a los módulos. |
+| **Cotizador de Tours** | `/tours` | Genera vouchers/cotizaciones, catálogo de productos, historial, búsqueda y descarga de **PDF**. |
+| **EoT CRM** | `/minicrm` | Gestión de servicios de transporte (listado, alta/edición, filtros, paginación, finanzas). |
+| **Control de Flotilla** | `/flotilla` | Bitácora operativa: viajes, ingresos, gastos, kilometraje y combustible por unidad. |
+| **Log** | `/secret-history` | Historial de accesos (con detección de dispositivo/navegador por User-Agent). |
 
-## Instalación
+## Rutas (React Router, `basename="/crm"`)
 
-1. Copia `transport-crm.php` a `wp-content/plugins/` (en su propia carpeta) o súbelo como plugin.
-2. Actívalo en **Plugins** del admin de WordPress → crea la tabla.
-3. Aparecerá el menú **EoT CRM**.
+```
+/                 → Login
+/menu             → Menú principal        (protegida)
+/tours            → Cotizador de Tours    (protegida)
+/minicrm          → EoT CRM (transporte)  (protegida)
+/flotilla         → Control de Flotilla   (protegida)
+/secret-history   → Log / historial        (protegida)
+```
 
-> Requiere **WordPress** y **PHP**. Usa `$wpdb` (no hay credenciales hardcodeadas). Está pensado para correr en `exclusiveontrip.com/crm/`.
+## Stack
+
+- **React 19** + **Vite 7**
+- **Tailwind CSS 3**
+- **React Router 7**
+- **axios** (llamadas a la API)
+- **lucide-react** (iconos)
+- **html2pdf.js** + **react-to-print** (PDF / impresión)
+
+## Backend (API PHP)
+
+El frontend consume una API propia (no incluida en este repo):
+
+| Base / endpoint | Uso |
+|---|---|
+| `…/crm/api/index.php` | Login (`?action=login`) e historial (`?action=get_logs`), y datos del cotizador. |
+| `…/crm/api/transport.php` | Servicios de transporte (módulo EoT CRM). |
+| `…/crm/api/api_flotilla.php` | Bitácora de flotilla. |
+| `…/crm/api/ver.php` | Visor público del voucher de tours. |
+| `…/crm/api/ver_transport.php` | Visor del voucher de transporte. |
+
+Cada módulo define su `API_URL` al inicio del archivo (p. ej. `src/pages/ToursModule.jsx`, `src/pages/TransportModule.tsx`, `src/pages/FlotillaPage.jsx`, `src/pages/Login.jsx`).
+
+## Requisitos
+
+- **Node.js 18+** y npm.
+
+## Desarrollo local
+
+```bash
+npm install
+npm run dev      # http://localhost:5173/crm/
+```
+
+> Como `vite.config.js` define `base: '/crm/'`, el dev server sirve la app en **`/crm/`**.
+
+Otros scripts:
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Servidor de desarrollo (Vite + HMR). |
+| `npm run build` | Build de producción en `dist/`. |
+| `npm run preview` | Previsualiza el build. |
+| `npm run lint` | ESLint. |
+
+## Deploy
+
+App **estática**: `npm run build` y sube el contenido de `dist/` a la carpeta **`/crm/`** del dominio. La API PHP vive aparte, en `exclusiveontrip.com/crm/api/`.
+
+## Estructura
+
+```
+index.html                    HTML base (título/descr., favicon /logo.png)
+vite.config.js                base: '/crm/'
+tailwind.config.js
+src/
+  main.jsx                    Entry point
+  App.jsx                     Rutas + ProtectedRoute + títulos por página
+  pages/
+    Login.jsx                 Acceso (API ?action=login)
+    DashboardMenu.jsx         Menú de módulos
+    ToursModule.jsx           Cotizador de tours + PDF
+    TransportModule.tsx       EoT CRM (transporte)
+    FlotillaPage.jsx          Control de flotilla
+    SiteHistory.jsx           Historial de accesos
+public/
+  logo.png · expertos.jpg · taxi.jpg · plantilla_presentacion.pdf
+```
 
 ## Notas
 
-- El README anterior describía un *"Service Receipt Plugin"* genérico (con ejemplos de CSS/JS); **no correspondía** a este código. Este documento describe el plugin real.
-- `travel-reservation.html` carga el logo desde `https://exclusiveontrip.com/logo.png` y muestra el correo de contacto del negocio.
-- No hay archivo `LICENSE` en el repositorio (el README anterior mencionaba MIT).
-
-## Licencia
-
-Sin archivo de licencia incluido.
+- **Sesión:** el login guarda el usuario en `localStorage` (`crm_user`) y `ProtectedRoute` solo comprueba que exista. La autorización real debe hacerla el **backend**.
+- **Credenciales:** el repo **no** contiene usuarios ni contraseñas; estas se envían a la API en el login.
+- **Historial de git:** en commits anteriores vivía la versión antigua (un plugin de WordPress `transport-crm.php` + `travel-reservation.html`). Este repo ahora contiene la versión nueva del sistema.
+- Este repositorio es **privado** (`"private": true`).
